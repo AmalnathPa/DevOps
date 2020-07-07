@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vnetName": {
+      "type": "string"
+    },
+    "vnetAddressPrefix": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "Object"
+    },
+    "subnets": {
+      "type": "object"
+    },
+    "noofSubnets": {
+      "type": "int"
+    },
+    "location": {
+      "type": "string"
+    },
+    "dnsServers": {
+      "type": "array"
+    }
+  },
+  "variables": {
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('vnetName')]",
+      "apiVersion": "2019-12-01",
+      "location": "[parameters('location')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('vnetAddressPrefix')]"
+          ]
+        },
+		"dhcpOptions": {
+			"dnsServers": "[parameters('dnsServers')]"
+		},
+        "enableDdosProtection": false,
+		"enableVMProtection": false
+      }
+    },
+    {
+      "name": "[concat(parameters('vnetName'),'/',parameters('subnets').subnets[copyIndex()].name)]",
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "apiVersion": "2019-12-01",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+      ],
+      "properties": {
+		"addressPrefix": "[parameters('subnets').subnets[copyIndex()].addressPrefix]"
+		},
+	  "copy": {
+			"name": "subnetCopy",
+			"count": "[parameters('noofSubnets')]",
+			"mode": "serial"
+			}	
+		}
+	]
+}
